@@ -61,11 +61,13 @@ export function useAuth() {
           daily_usage: 0,
           last_usage_reset: new Date().toISOString().split('T')[0],
         });
+        setLoading(false);
         return;
       }
 
       if (existingProfile) {
         setProfile(existingProfile);
+        setLoading(false);
         return;
       }
 
@@ -106,9 +108,9 @@ export function useAuth() {
         daily_usage: 0,
         last_usage_reset: new Date().toISOString().split('T')[0],
       });
-    } finally {
-      setLoading(false);
     }
+    
+    setLoading(false);
   };
 
   const signInWithGoogle = async () => {
