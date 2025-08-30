@@ -24,6 +24,7 @@ export function useAuth() {
         fetchProfile(session.user.id);
       } else {
         setLoading(false);
+        setLoading(false);
       }
     });
 
@@ -44,7 +45,6 @@ export function useAuth() {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    
     try {
       // First try to get existing profile
       const { data: existingProfile, error: fetchError } = await supabase
@@ -85,7 +85,7 @@ export function useAuth() {
         .from('profiles')
         .insert(newProfile)
         .select()
-        .maybeSingle();
+        .single();
 
       if (createError) {
         console.error('Error creating profile:', createError);
