@@ -48,9 +48,16 @@ export function useAuth() {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      if (!data) {
         // Profile doesn't exist, create one
         const newProfile = {
           id: userId,
