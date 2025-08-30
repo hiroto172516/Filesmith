@@ -148,7 +148,6 @@ export function useAuth() {
     if (error) throw error;
   };
 
-        setDebugInfo(`Profile fetch error: ${fetchError.message}`);
   const signInWithEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
