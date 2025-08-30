@@ -44,6 +44,24 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Early returns after all hooks
+  if (currentPage === 'success') {
+    return <SuccessPage />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-2xl">F</span>
+          </div>
+          <p className="text-gray-600">Loading FileSmith...</p>
+        </div>
+      </div>
+    );
+  }
+
   const getCurrentUsage = () => {
     if (user && profile) {
       return profile.daily_usage || 0;
@@ -113,23 +131,6 @@ const App: React.FC = () => {
     setActiveTab('generate');
     console.log('Create new preset');
   };
-
-  if (currentPage === 'success') {
-    return <SuccessPage />;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <span className="text-white font-bold text-2xl">F</span>
-          </div>
-          <p className="text-gray-600">Loading FileSmith...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">

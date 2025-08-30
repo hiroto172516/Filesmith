@@ -50,69 +50,62 @@ export function useAuth() {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    setDebugInfo('Starting profile fetch...');
     setLoading(true);
     
     try {
-      setDebugInfo('Querying existing profile...');
-    // First try to get existing profile
-    const { data: existingProfile, error: fetchError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+      // First try to get existing profile
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (fetchError) {
-      console.error('Error fetching profile:', fetchError);
-      // Create a default profile if fetch fails
-      setProfile({
+      if (fetchError) {
+        console.error('Error fetching profile:', fetchError);
+        // Create a default profile if fetch fails
+        setProfile({
+          id: userId,
+          plan: 'free',
+          stripe_customer_id: null,
+          daily_usage: 0,
+          last_usage_reset: new Date().toISOString().split('T')[0],
+        });
+        return;
+      }
+
+      if (existingProfile) {
+        setProfile(existingProfile);
+        return;
+      }
+
+      // Profile doesn't exist, create one
+      const newProfile = {
         id: userId,
-        plan: 'free',
-        stripe_customer_id: null,
+        plan: 'free' as const,
         daily_usage: 0,
         last_usage_reset: new Date().toISOString().split('T')[0],
-      });
-      setLoading(false);
-      return;
-    }
+      };
 
-    if (existingProfile) {
-      setProfile(existingProfile);
-      setLoading(false);
-      return;
-    }
+      const { data: createdProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .maybeSingle();
 
-    // Profile doesn't exist, create one
-    const newProfile = {
-      id: userId,
-      plan: 'free' as const,
-      daily_usage: 0,
-      last_usage_reset: new Date().toISOString().split('T')[0],
-    };
-
-    const { data: createdProfile, error: createError } = await supabase
-      .from('profiles')
-      .insert(newProfile)
-      .select()
-      .maybeSingle();
-
-    if (createError) {
-        setDebugInfo(`Profile creation error: ${createError.message}`);
-      console.error('Error creating profile:', createError);
-      // Use default profile if creation fails
-      setProfile({
-        id: userId,
-        plan: 'free',
-        stripe_customer_id: null,
-        daily_usage: 0,
-        last_usage_reset: new Date().toISOString().split('T')[0],
-      });
-    } else {
-        setDebugInfo('Profile created successfully');
-      setProfile(createdProfile);
-    }
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        // Use default profile if creation fails
+        setProfile({
+          id: userId,
+          plan: 'free',
+          stripe_customer_id: null,
+          daily_usage: 0,
+          last_usage_reset: new Date().toISOString().split('T')[0],
+        });
+      } else {
+        setProfile(createdProfile);
+      }
     } catch (error) {
-      setDebugInfo(`Unexpected error: ${error}`);
       console.error('Unexpected error in fetchProfile:', error);
       // Set default profile on any unexpected error
       setProfile({
@@ -123,7 +116,6 @@ export function useAuth() {
         last_usage_reset: new Date().toISOString().split('T')[0],
       });
     } finally {
-      setDebugInfo('Profile fetch completed');
       setLoading(false);
     }
   };
