@@ -106,6 +106,9 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
+    }
+    )
+  }
   const incrementDailyUsage = async () => {
     if (!user || !profile) return false;
 
