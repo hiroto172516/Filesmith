@@ -163,13 +163,11 @@ export function useAuth() {
       password,
     });
     if (error) throw error;
-        setDebugInfo('Profile found, setting profile...');
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-      setDebugInfo('No profile found, creating new one...');
   };
   const incrementDailyUsage = async () => {
     if (!user || !profile) return false;
