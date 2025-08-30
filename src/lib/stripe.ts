@@ -13,6 +13,10 @@ export async function createCheckoutSession(
   priceId: string,
   mode: 'payment' | 'subscription' = 'subscription'
 ) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please check your environment variables.');
+  }
+
   try {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
@@ -44,9 +48,6 @@ export async function createCheckoutSession(
     const { sessionId } = await response.json();
     
     const stripeInstance = await stripe;
-    if (!stripeInstance) {
-      throw new Error('Stripe not initialized');
-    }
 
     const { error } = await stripeInstance.redirectToCheckout({
       sessionId,
