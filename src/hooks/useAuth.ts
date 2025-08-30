@@ -106,26 +106,6 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    });
-    if (error) throw error;
-  };
-
-  const signUpWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: undefined, // Disable email confirmation
-      },
-    });
-    if (error) throw error;
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error signing out:', error);
-  };
-
   const incrementDailyUsage = async () => {
     if (!user || !profile) return false;
 
@@ -175,8 +155,6 @@ export function useAuth() {
     loading,
     signInWithEmail,
     signUpWithEmail,
-    signInWithGoogle,
-    signInWithGitHub,
     signOut,
     incrementDailyUsage,
     getDailyLimit,
