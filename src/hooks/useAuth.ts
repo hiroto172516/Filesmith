@@ -14,7 +14,6 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
   useEffect(() => {
     // Get initial session
@@ -23,7 +22,6 @@ export function useAuth() {
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
-        setLoading(false);
         setLoading(false);
       }
     });
@@ -63,13 +61,11 @@ export function useAuth() {
           daily_usage: 0,
           last_usage_reset: new Date().toISOString().split('T')[0],
         });
-        setLoading(false);
         return;
       }
 
       if (existingProfile) {
         setProfile(existingProfile);
-        setLoading(false);
         return;
       }
 
@@ -155,6 +151,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
+
   const incrementDailyUsage = async () => {
     if (!user || !profile) return false;
 
