@@ -48,9 +48,9 @@ export function useAuth() {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
-      if (error && error.code === 'PGRST116') {
+      if (error) {
         // Profile doesn't exist, create one
         const newProfile = {
           id: userId,
@@ -67,19 +67,39 @@ export function useAuth() {
 
         if (createError) {
           console.error('Error creating profile:', createError);
+          setProfile(null);
         } else {
           setProfile(createdProfile);
         }
-      } else if (error) {
-        console.error('Error fetching profile:', error);
-      } else if (data) {
+      } else {
         setProfile(data);
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}`,
+      },
+    });
+    if (error) throw error;
+  };
+
+  const signInWithGitHub = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}`,
+      },
+    });
+    if (error) throw error;
   };
 
   const signInWithGoogle = async () => {
@@ -106,8 +126,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    }
-    )
+    });
     if (error) throw error;
   };
 
@@ -122,7 +141,7 @@ export function useAuth() {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-  }
+  };
   const incrementDailyUsage = async () => {
     if (!user || !profile) return false;
 
@@ -170,6 +189,8 @@ export function useAuth() {
     user,
     profile,
     loading,
+    signInWithGoogle,
+    signInWithGitHub,
     signInWithEmail,
     signUpWithEmail,
     signOut,
