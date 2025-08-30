@@ -43,50 +43,64 @@ export function useAuth() {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+    setLoading(true);
+    
+    // First try to get existing profile
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      if (!data) {
-        // Profile doesn't exist, create one
-        const newProfile = {
-          id: userId,
-          plan: 'free' as const,
-          daily_usage: 0,
-          last_usage_reset: new Date().toISOString().split('T')[0],
-        };
-
-        const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert(newProfile)
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('Error creating profile:', createError);
-          setProfile(null);
-        } else {
-          setProfile(createdProfile);
-        }
-      } else {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error('Error in fetchProfile:', error);
-      setProfile(null);
-    } finally {
+    if (fetchError) {
+      console.error('Error fetching profile:', fetchError);
+      // Create a default profile if fetch fails
+      setProfile({
+        id: userId,
+        plan: 'free',
+        stripe_customer_id: null,
+        daily_usage: 0,
+        last_usage_reset: new Date().toISOString().split('T')[0],
+      });
       setLoading(false);
+      return;
     }
+
+    if (existingProfile) {
+      setProfile(existingProfile);
+      setLoading(false);
+      return;
+    }
+
+    // Profile doesn't exist, create one
+    const newProfile = {
+      id: userId,
+      plan: 'free' as const,
+      daily_usage: 0,
+      last_usage_reset: new Date().toISOString().split('T')[0],
+    };
+
+    const { data: createdProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert(newProfile)
+      .select()
+      .maybeSingle();
+
+    if (createError) {
+      console.error('Error creating profile:', createError);
+      // Use default profile if creation fails
+      setProfile({
+        id: userId,
+        plan: 'free',
+        stripe_customer_id: null,
+        daily_usage: 0,
+        last_usage_reset: new Date().toISOString().split('T')[0],
+      });
+    } else {
+      setProfile(createdProfile);
+    }
+    
+    setLoading(false);
   };
 
   const signInWithGoogle = async () => {
