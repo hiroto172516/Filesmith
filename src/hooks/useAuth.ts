@@ -17,25 +17,19 @@ export function useAuth() {
   const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
   useEffect(() => {
-    setDebugInfo('Getting initial session...');
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setDebugInfo('Session retrieved, setting user...');
       setUser(session?.user ?? null);
       if (session?.user) {
-        setDebugInfo('User found, fetching profile...');
         fetchProfile(session.user.id);
       } else {
-        setDebugInfo('No user found, setting loading to false');
         setLoading(false);
       }
     });
 
-    setDebugInfo('Setting up auth state listener...');
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setDebugInfo(`Auth state changed: ${event}`);
         setUser(session?.user ?? null);
         if (session?.user) {
           await fetchProfile(session.user.id);
@@ -50,7 +44,6 @@ export function useAuth() {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    setLoading(true);
     
     try {
       // First try to get existing profile
@@ -70,11 +63,13 @@ export function useAuth() {
           daily_usage: 0,
           last_usage_reset: new Date().toISOString().split('T')[0],
         });
+        setLoading(false);
         return;
       }
 
       if (existingProfile) {
         setProfile(existingProfile);
+        setLoading(false);
         return;
       }
 
