@@ -3,18 +3,18 @@ import { supabase } from './supabase';
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
-if (!stripePublishableKey) {
-  console.warn('Stripe publishable key not found. Payment features will be disabled.');
-}
-
 export const stripe = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 export async function createCheckoutSession(
   priceId: string,
   mode: 'payment' | 'subscription' = 'subscription'
 ) {
+  if (!stripePublishableKey) {
+    throw new Error('Stripe publishable key is missing. Please add VITE_STRIPE_PUBLISHABLE_KEY to your environment variables.');
+  }
+
   if (!stripe) {
-    throw new Error('Stripe is not configured. Please check your environment variables.');
+    throw new Error('Failed to initialize Stripe. Please check your Stripe publishable key.');
   }
 
   try {
@@ -24,7 +24,12 @@ export async function createCheckoutSession(
       throw new Error('User not authenticated');
     }
 
-    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) {
+      throw new Error('Supabase URL is missing. Please add VITE_SUPABASE_URL to your environment variables.');
+    }
+
+    const apiUrl = `${supabaseUrl}/functions/v1/stripe-checkout`;
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -48,6 +53,10 @@ export async function createCheckoutSession(
     const { sessionId } = await response.json();
     
     const stripeInstance = await stripe;
+    
+    if (!stripeInstance) {
+      throw new Error('Failed to load Stripe instance');
+    }
 
     const { error } = await stripeInstance.redirectToCheckout({
       sessionId,
