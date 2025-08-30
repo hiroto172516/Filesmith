@@ -126,9 +126,6 @@ const App: React.FC = () => {
             <span className="text-white font-bold text-2xl">F</span>
           </div>
           <p className="text-gray-600">Loading FileSmith...</p>
-          {process.env.NODE_ENV === 'development' && (
-            <p className="text-xs text-gray-400 mt-2">{(useAuth() as any).debugInfo}</p>
-          )}
         </div>
       </div>
     );
