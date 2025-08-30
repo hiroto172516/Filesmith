@@ -13,6 +13,9 @@ import type { GenerationJob } from './components/FileGenerator';
 import type { Preset } from './hooks/usePresets';
 
 const App: React.FC = () => {
+  const { user, profile, loading, signOut, isAuthenticated, getDailyLimit } = useAuth();
+  const { subscription, plan } = useSubscription(user?.id);
+  
   const [activeTab, setActiveTab] = useState<'generate' | 'presets' | 'history'>('generate');
   const [generationHistory, setGenerationHistory] = useState<GenerationJob[]>([]);
   const [guestUsage, setGuestUsage] = useState(0);
@@ -20,9 +23,6 @@ const App: React.FC = () => {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentPage, setCurrentPage] = useState<'main' | 'success'>('main');
   
-  const { user, profile, loading, signOut, isAuthenticated, getDailyLimit } = useAuth();
-  const { subscription, plan } = useSubscription(user?.id);
-
   // Listen for custom events
   useEffect(() => {
     const handleOpenAuth = () => setShowAuthModal(true);
