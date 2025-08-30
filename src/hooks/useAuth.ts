@@ -14,21 +14,28 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
   useEffect(() => {
+    setDebugInfo('Getting initial session...');
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setDebugInfo('Session retrieved, setting user...');
       setUser(session?.user ?? null);
       if (session?.user) {
+        setDebugInfo('User found, fetching profile...');
         fetchProfile(session.user.id);
       } else {
+        setDebugInfo('No user found, setting loading to false');
         setLoading(false);
       }
     });
 
+    setDebugInfo('Setting up auth state listener...');
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        setDebugInfo(`Auth state changed: ${event}`);
         setUser(session?.user ?? null);
         if (session?.user) {
           await fetchProfile(session.user.id);
@@ -43,8 +50,11 @@ export function useAuth() {
   }, []);
 
   const fetchProfile = async (userId: string) => {
+    setDebugInfo('Starting profile fetch...');
     setLoading(true);
     
+    try {
+      setDebugInfo('Querying existing profile...');
     // First try to get existing profile
     const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
@@ -87,6 +97,7 @@ export function useAuth() {
       .maybeSingle();
 
     if (createError) {
+        setDebugInfo(`Profile creation error: ${createError.message}`);
       console.error('Error creating profile:', createError);
       // Use default profile if creation fails
       setProfile({
@@ -97,10 +108,24 @@ export function useAuth() {
         last_usage_reset: new Date().toISOString().split('T')[0],
       });
     } else {
+        setDebugInfo('Profile created successfully');
       setProfile(createdProfile);
     }
-    
-    setLoading(false);
+    } catch (error) {
+      setDebugInfo(`Unexpected error: ${error}`);
+      console.error('Unexpected error in fetchProfile:', error);
+      // Set default profile on any unexpected error
+      setProfile({
+        id: userId,
+        plan: 'free',
+        stripe_customer_id: null,
+        daily_usage: 0,
+        last_usage_reset: new Date().toISOString().split('T')[0],
+      });
+    } finally {
+      setDebugInfo('Profile fetch completed');
+      setLoading(false);
+    }
   };
 
   const signInWithGoogle = async () => {
@@ -123,6 +148,7 @@ export function useAuth() {
     if (error) throw error;
   };
 
+        setDebugInfo(`Profile fetch error: ${fetchError.message}`);
   const signInWithEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -137,11 +163,13 @@ export function useAuth() {
       password,
     });
     if (error) throw error;
+        setDebugInfo('Profile found, setting profile...');
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+      setDebugInfo('No profile found, creating new one...');
   };
   const incrementDailyUsage = async () => {
     if (!user || !profile) return false;
